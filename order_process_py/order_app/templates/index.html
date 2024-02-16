@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>Product Catalog</h2>
+    
+    <div class="row">
+      {% for product in products %}
+        <div class="col-md-4">
+          <div class="card mt-3" style="width: 18rem;">
+            <img src="{{ product.thumbnail }}" class="card-img-top" alt="{{ product.title }}">
+            <div class="card-body">
+              <h5 class="card-title">{{ product.title }}</h5>
+              <p class="card-text">{{ product.description }}</p>
+              <p class="card-text">Price: ${{ product.price }}</p>
+              
+              {# Add to Products button with JavaScript to handle the click event #}
+              <button class="btn btn-primary w-100 add-to-products" data-product-id="{{ product.id }}" data-product-title="{{ product.title }}" data-product-description="{{ product.description }}" data-product-price="{{ product.price|floatformat:2 }}">Add to Products</button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    // JavaScript to handle the Add to Products button click event
+    document.querySelectorAll('.add-to-products').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var productTitle = this.getAttribute('data-product-title');
+        var productDescription = this.getAttribute('data-product-description');
+        var productPrice = this.getAttribute('data-product-price');
+
+        // AJAX request to add the product to the cart
+        fetch('/add_to_products/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({
+            product_title: productTitle, 
+            product_description: productDescription,
+            product_price: productPrice,
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            // Optionally, you can display a success message or update the UI
+            alert('Product added to Products!');
+            alert(productTitle, productDescription, productPrice);
+          } else if (data.status === 'exists') {
+            // Optionally, you can display a message for existing products
+            alert('Product already exists in Products!');
+          } else {
+            // Optionally, handle other error scenarios
+            alert('Failed to add product to Products.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while processing your request.');
+        });
+      });
+    });
+  </script>
+{% endblock %}
